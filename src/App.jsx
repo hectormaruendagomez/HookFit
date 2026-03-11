@@ -45,6 +45,20 @@ function App() {
     // Escuchar cambios de sesión (login/logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+
+      if (session?.user) {
+        supabase
+          .from('profiles')
+          .select('is_pro')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data }) => {
+            if (data?.is_pro) setIsPro(true);
+            else setIsPro(false);
+          });
+      } else {
+        setIsPro(false);
+      }
     });
 
     return () => subscription.unsubscribe();
