@@ -10,6 +10,7 @@ import PricingSection from './components/PricingSection';
 import SpyIntel from './components/SpyIntel';
 import AuthPage from './components/AuthPage';
 import ProfilePage from './components/ProfilePage';
+import PaymentPage from './components/PaymentPage';
 import { useLanguage } from './context/LanguageContext';
 import { supabase } from './lib/supabase';
 
@@ -28,7 +29,17 @@ function App() {
 
     // Comprobar si hay sesión activa
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setUser(session.user);
+      if (session) {
+        setUser(session.user);
+        supabase
+          .from('profiles')
+          .select('is_pro')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data }) => {
+            if (data?.is_pro) setIsPro(true);
+          });
+      }
     });
 
     // Escuchar cambios de sesión (login/logout)
@@ -98,6 +109,10 @@ function App() {
   };
 
   const handleUnlockPro = () => {
+    setActiveSection('payment');
+  };
+
+  const handlePaymentComplete = () => {
     setIsPro(true);
     setActiveSection('home');
   };
@@ -261,6 +276,14 @@ function App() {
             <AuthPage
               onBack={() => setActiveSection('home')}
               onLogin={handleLogin}
+            />
+          )}
+
+          {/* PAYMENT section */}
+          {activeSection === 'payment' && (
+            <PaymentPage
+              onBack={() => setActiveSection('home')}
+              onPaymentComplete={handlePaymentComplete}
             />
           )}
 
