@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE = '/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://hookfit-production.up.railway.app';
+const API_BASE = `${API_URL}/api`;
 
 export async function analyzeVideoFile(file) {
   const formData = new FormData();
