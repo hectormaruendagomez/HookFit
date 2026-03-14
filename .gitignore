@@ -1,8 +1,5 @@
-node_modules
-dist
+node_modules/
+dist/
 .env
-server/uploads
+server/uploads/
 *.log
-"node_modules" 
-".env" 
-"dist" 
