@@ -8,9 +8,9 @@ export default function PaymentPage({ onBack, onPaymentComplete }) {
   const [cvc, setCvc] = useState('');
   const [name, setName] = useState('');
   const [processing, setProcessing] = useState(false);
-  const { language } = useLanguage();
+  const { lang } = useLanguage();
 
-  const isEs = language === 'es';
+  const isEs = lang === 'es';
 
   const formatCardNumber = (value) => {
     const digits = value.replace(/\D/g, '').slice(0, 16);

@@ -1,6 +1,7 @@
 import { exec } from 'child_process';
 import path from 'path';
 import { promisify } from 'util';
+import fs from 'fs';
 
 const execAsync = promisify(exec);
 
@@ -32,5 +33,28 @@ export async function getVideoDuration(videoPath) {
     return parseFloat(stdout.trim());
   } catch {
     return null;
+  }
+}
+
+export async function extractFrames(videoPath) {
+  const framesDir = path.join(path.dirname(videoPath), 'frames_' + Date.now());
+  if (!fs.existsSync(framesDir)) {
+    fs.mkdirSync(framesDir, { recursive: true });
+  }
+
+  const outputPattern = path.join(framesDir, 'frame_%03d.jpg');
+
+  try {
+    // Extract 1 frame every 5 seconds, max 6 frames
+    await execAsync(
+      `ffmpeg -i "${videoPath}" -vf "fps=1/5" -vframes 6 -q:v 2 "${outputPattern}"`,
+      { timeout: 60000 }
+    );
+
+    const files = fs.readdirSync(framesDir);
+    return files.filter(f => f.endsWith('.jpg')).map(f => path.join(framesDir, f));
+  } catch (error) {
+    console.warn('FFmpeg frame extraction failed:', error.message);
+    return [];
   }
 }

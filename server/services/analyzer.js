@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import fs from 'fs';
 
 function getOpenAIClient() {
   if (!process.env.OPENAI_API_KEY) {
@@ -7,7 +8,7 @@ function getOpenAIClient() {
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 }
 
-export async function analyzeVideo({ transcript, fileSizeMB, fileName, duration, url }) {
+export async function analyzeVideo({ transcript, fileSizeMB, fileName, duration, url, frames = [] }) {
   const openai = getOpenAIClient();
   if (!openai) {
     console.warn('No OPENAI_API_KEY set — returning mock analysis');
@@ -22,8 +23,11 @@ Duration: ${duration}
 Size: ${fileSizeMB || 'unknown'} MB
 ${url ? `URL: ${url}` : ''}
 
-Transcript:
+Transcript (with precise timestamps):
 ${transcript}
+
+Note: Use the exact timestamps provided in the transcript for your retention_risks analysis. Do not invent timestamps.
+Also, analyze the attached video frames (if any) to evaluate the visual hook, body language, text overlays, and framing.
 
 Return this exact JSON schema:
 {
@@ -50,10 +54,30 @@ Return this exact JSON schema:
   "top_priority": "<string>"
 }`;
 
+  const userContent = [
+    { type: 'text', text: prompt }
+  ];
+
+  // Attach images if available
+  if (frames && frames.length > 0) {
+    for (const frame of frames) {
+      if (fs.existsSync(frame)) {
+        const base64Image = fs.readFileSync(frame).toString('base64');
+        userContent.push({
+          type: 'image_url',
+          image_url: {
+            url: `data:image/jpeg;base64,${base64Image}`,
+            detail: 'low'
+          }
+        });
+      }
+    }
+  }
+
   try {
     const result = await openai.chat.completions.create({
-      model: 'gpt-4.1-mini',
-      messages: [{ role: 'user', content: prompt }],
+      model: 'gpt-4o-mini', // Updated to gpt-4o-mini
+      messages: [{ role: 'user', content: userContent }],
       temperature: 0.4,
     });
 

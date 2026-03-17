@@ -4,7 +4,7 @@ import multer from 'multer';
 import dotenv from 'dotenv';
 import { analyzeVideo } from './services/analyzer.js';
 import { transcribeAudio } from './services/transcriber.js';
-import { extractAudio } from './services/videoProcessor.js';
+import { extractAudio, extractFrames } from './services/videoProcessor.js';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -87,6 +87,16 @@ app.post('/api/analyze', upload.single('video'), async (req, res) => {
       transcript = '[Transcription unavailable — analysis based on metadata only]';
     }
 
+    // Extract frames for visual analysis
+    let frames = [];
+    try {
+      if (filePath) {
+        frames = await extractFrames(filePath);
+      }
+    } catch (err) {
+      console.warn('Frame extraction failed, continuing without vision:', err.message);
+    }
+
     // Get video duration / metadata
     const stats = fs.statSync(filePath);
     const fileSizeMB = (stats.size / (1024 * 1024)).toFixed(2);
@@ -96,10 +106,18 @@ app.post('/api/analyze', upload.single('video'), async (req, res) => {
       transcript,
       fileSizeMB,
       fileName: videoFile.originalname,
-      duration: req.body?.duration || 'unknown'
+      duration: req.body?.duration || 'unknown',
+      frames
     });
 
-    // Clean up uploaded file
+    // Clean up uploaded file and frames
+    if (frames && frames.length > 0) {
+      const framesDir = path.dirname(frames[0]);
+      frames.forEach(f => {
+        if (fs.existsSync(f)) fs.unlinkSync(f);
+      });
+      if (fs.existsSync(framesDir)) fs.rmdirSync(framesDir);
+    }
     if (filePath && fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
