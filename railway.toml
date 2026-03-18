@@ -1,9 +1,6 @@
 [build]
-builder = "nixpacks"
-buildCommand = "cd server && npm install"
-
-[build.nixpacksPlan.phases.setup]
-nixPkgs = ["ffmpeg"]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "cd server && node index.js"
+startCommand = "node index.js"
