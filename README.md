@@ -28,3 +28,11 @@ Desarrollo full-stack en solitario: diseño de producto, frontend (React/Tailwin
 Estado
 
 En desarrollo activo, con despliegue en producción.
+
+
+## Estado
+
+Proyecto en pausa / no desplegado actualmente. El código cubre 
+[lo que funciona: frontend, integración de pagos, etc.]; queda 
+pendiente [lo que falla: despliegue del backend, procesamiento de 
+vídeo, lo que sea].
